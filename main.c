@@ -21,10 +21,16 @@ int main(int argc, char **argv)
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Window *window = SDL_CreateWindow("title", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 600, 600, 0);
+    if (!window)
+        return -1;
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+        return -1;
 
     SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 600, 600);
+    if (!texture)
+        return -1;
 
     for (;;)
     {
@@ -37,7 +43,7 @@ int main(int argc, char **argv)
         }
 
         int pitch;
-        SDL_LockTexture(texture, NULL, &ctx.framebuffer, &pitch);
+        SDL_LockTexture(texture, NULL, (void **)&ctx.framebuffer, &pitch);
 
         rasterize(&ctx, &triangle);
 
