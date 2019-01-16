@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
     ctx.camera_position = Vector3_new(0, 1.5, -5);
 
-    ctx.light_position = Vector3_new(0, 0, -100);
+    ctx.light_position = Vector3_new(0, 4, -10);
 
     ctx.framebuffer = NULL;
 
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     if (!renderer)
         return -1;
 
-    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 600, 600);
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 600, 600);
     if (!texture)
         return -1;
 

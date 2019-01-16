@@ -40,6 +40,9 @@ typedef struct Context
     Vector3_t *vertices;
     size_t vertices_count;
 
+    Vector3_t *normals;
+    size_t normals_count;
+
     Triangle_t *faces;
     size_t faces_count;
 
@@ -54,4 +57,5 @@ typedef struct Context
 void rasterize(Context_t *ctx, Triangle_t *triangle);
 
 void context_add_point(Context_t *ctx, Vector3_t v);
+void context_add_normal(Context_t *ctx, Vector3_t v);
 void context_add_face(Context_t *ctx, Triangle_t t);

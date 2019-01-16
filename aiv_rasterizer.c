@@ -15,6 +15,19 @@ void context_add_point(Context_t *ctx, Vector3_t v)
     ctx->vertices[ctx->vertices_count - 1] = v;
 }
 
+void context_add_normal(Context_t *ctx, Vector3_t v)
+{
+    ctx->normals_count++;
+    Vector3_t *new_normals = realloc(ctx->normals, sizeof(Vector3_t) * ctx->normals_count);
+    if (!new_normals)
+    {
+        // TODO explode
+        return;
+    }
+    ctx->normals = new_normals;
+    ctx->normals[ctx->normals_count - 1] = v;
+}
+
 void context_add_face(Context_t *ctx, Triangle_t t)
 {
     ctx->faces_count++;
@@ -85,8 +98,6 @@ static void view_to_raster(Context_t *ctx, Vertex_t *vertex)
     float projected_x = vertex->view_position.x / (camera_distance * z);
     float projected_y = vertex->view_position.y / (camera_distance * z);
 
-    //vertex->raster_x = clamp((projected_x + 1) * (ctx->width * 0.5), 0, ctx->width - 1);
-    //vertex->raster_y = clamp(ctx->height - ((projected_y + 1) * (ctx->height * 0.5)), 0, ctx->height - 1);
     vertex->raster_x = (projected_x + 1) * (ctx->width * 0.5);
     vertex->raster_y = ctx->height - ((projected_y + 1) * (ctx->height * 0.5));
 }
@@ -113,6 +124,12 @@ static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2
     Vector3_t left_color = lerp3(left[0]->position, left[1]->position, gradientLeft);
     Vector3_t right_color = lerp3(right[0]->position, right[1]->position, gradientRight);
 
+    Vector3_t left_normal = lerp3(left[0]->normal, left[1]->normal, gradientLeft);
+    Vector3_t right_normal = lerp3(right[0]->normal, right[1]->normal, gradientRight);
+
+    Vector3_t left_vertex = lerp3(left[0]->position, left[1]->position, gradientLeft);
+    Vector3_t right_vertex = lerp3(right[0]->position, right[1]->position, gradientRight);
+
     float start_z = lerp(left[0]->z, left[1]->z, gradientLeft);
     float end_z = lerp(right[0]->z, right[1]->z, gradientRight);
 
@@ -123,10 +140,14 @@ static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2
         float gradient = 1;
         if (start_x != end_x)
             gradient = (float)(x - start_x) / (end_x - start_x);
-        Vector3_t color = lerp3(left_color, right_color, gradient);
+        //Vector3_t color = lerp3(left_color, right_color, gradient);
+        Vector3_t color = Vector3_new(1, 1, 1);
         float z = lerp(start_z, end_z, gradient);
-        color = Vector3_new(1, 0, 0);
-        put_pixel(ctx, x, y, z, color);
+        Vector3_t normal = Vector3_normalized(lerp3(left_normal, right_normal, gradient));
+        Vector3_t vertex = lerp3(left_vertex, right_vertex, gradient);
+        Vector3_t light_vertex = Vector3_normalized(Vector3_sub(ctx->light_position, vertex));
+        float lambert = clampf(Vector3_dot(light_vertex, normal), 0, 1);
+        put_pixel(ctx, x, y, z, Vector3_mul(Vector3_add(color, Vector3_new(0.1, 0.1, 0.1)), lambert));
     }
 }
 
@@ -146,7 +167,7 @@ static int triangle_facing(Context_t *ctx, Triangle_t *triangle)
     float dot = Vector3_dot(normal, Vector3_new(0, 0, -1));
     if (dot >= 0)
         return 0;
-    return 1; 
+    return 1;
 }
 
 void rasterize(Context_t *ctx, Triangle_t *triangle)
@@ -167,11 +188,11 @@ void rasterize(Context_t *ctx, Triangle_t *triangle)
         return;
     }
 
-    /*if (!triangle_facing(ctx, triangle))
+    if (!triangle_facing(ctx, triangle))
     {
         ctx->triangle_culled++;
         return;
-    }*/
+    }
 
     ctx->triangle_processed++;
 
@@ -220,8 +241,7 @@ void rasterize(Context_t *ctx, Triangle_t *triangle)
     int y;
     int start_y = clamp(vertices[0]->raster_y, -1, ctx->height);
     int end_y = clamp(vertices[1]->raster_y, vertices[0]->raster_y, ctx->height);
-    //int start_y = vertices[0]->raster_y;
-    //int end_y = vertices[1]->raster_y;
+
     for (y = start_y; y < end_y; y++)
     {
         scanline(ctx, y, top_left, top_right);
@@ -229,8 +249,7 @@ void rasterize(Context_t *ctx, Triangle_t *triangle)
 
     start_y = clamp(vertices[1]->raster_y, vertices[0]->raster_y, ctx->height);
     end_y = clamp(vertices[2]->raster_y, vertices[1]->raster_y, ctx->height);
-    //start_y = vertices[1]->raster_y;
-    //end_y = vertices[2]->raster_y;
+
     for (y = start_y; y <= end_y; y++)
     {
         scanline(ctx, y, bottom_left, bottom_right);

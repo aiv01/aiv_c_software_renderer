@@ -52,12 +52,45 @@ Vector3_t Vector3_add(Vector3_t a, Vector3_t b)
     return v;
 }
 
+float Vector3_length(Vector3_t a)
+{
+    return sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
+}
+
+Vector3_t Vector3_normalized(Vector3_t a)
+{
+    float length = 1.0 / Vector3_length(a);
+
+    return Vector3_mul(a, length);
+}
+
+Vector3_t Vector3_mul(Vector3_t a, float b)
+{
+    Vector3_t v;
+    v.x = a.x * b;
+    v.y = a.y * b;
+    v.z = a.z * b;
+
+    return v;
+}
+
 void Vector3_print(Vector3_t v)
 {
     printf("{%f, %f, %f}\n", v.x, v.y, v.z);
 }
 
 int clamp(int value, int _min, int _max)
+{
+    if (value < _min)
+        return _min;
+
+    if (value > _max)
+        return _max;
+
+    return value;
+}
+
+float clampf(float value, float _min, float _max)
 {
     if (value < _min)
         return _min;
