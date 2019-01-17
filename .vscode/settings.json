@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "aiv_renderer.h": "c",
-        "aiv_obj_parser.h": "c",
-        "aiv_rasterizer.h": "c",
-        "stdlib.h": "c"
-    }
-}
