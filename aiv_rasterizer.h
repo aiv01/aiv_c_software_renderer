@@ -40,6 +40,8 @@ typedef struct Context
 
     float *depth_buffer;
 
+    unsigned char *stencil_buffer;
+
     Vector3_t *vertices;
     size_t vertices_count;
 

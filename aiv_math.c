@@ -126,3 +126,10 @@ Vector3_t Vector3_roty(Vector3_t a, float r)
     v.z = sinf(r) * a.x + cosf(r) * a.z;
     return v;
 }
+
+Vector3_t Vector3_reflect(Vector3_t a, Vector3_t n)
+{
+    float dot2 = Vector3_dot(a, n) * 2;
+    Vector3_t v = Vector3_mul(n, dot2);
+    return Vector3_sub(a, v);
+}

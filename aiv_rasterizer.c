@@ -121,7 +121,9 @@ static void view_to_raster(Context_t *ctx, Vertex_t *vertex)
 
 static void point_to_view(Context_t *ctx, Vertex_t *vertex)
 {
-    vertex->world_position = Vector3_roty(vertex->position, ctx->roty);
+    //Vector3_t world = Vector3_add(vertex->position, Vector3_mul(vertex->normal, 1));
+    Vector3_t world = vertex->position;
+    vertex->world_position = Vector3_roty(world, ctx->roty);
     vertex->world_normal = Vector3_roty(vertex->normal, ctx->roty);
     vertex->view_position = Vector3_sub(vertex->world_position, ctx->camera_position);
 }
@@ -185,6 +187,9 @@ static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2
         Vector3_t pixel_light_vector = Vector3_new(0, 0, -1);
         float lambert = clampf(Vector3_dot(pixel_normal, pixel_light_vector), 0, 1);
 
+        /*if (lambert > 0.6)
+            lambert = 1;*/
+
         Vector3_t pixel_position = lerp3(leftPixel, rightPixel, gradient);
         Vector3_t point_light_pixel_position = Vector3_normalized(Vector3_sub(ctx->point_light_position, pixel_position));
         float point_lambert = clampf(Vector3_dot(pixel_normal, point_light_pixel_position), 0, 1);
@@ -194,9 +199,27 @@ static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2
         Vector3_t diffuse_point_light = Vector3_mul(color, point_lambert);
 
         //Vector3_t diffuse = Vector3_add(diffuse_directional, diffuse_point_light);
-        Vector3_t diffuse = diffuse_point_light;
+        Vector3_t diffuse = diffuse_directional;
         Vector3_t ambient = Vector3_new(0.2, 0.2, 0.2);
         Vector3_t final_color = Vector3_add(diffuse, ambient);
+
+        Vector3_t camera_to_pixel = Vector3_normalized(Vector3_sub(pixel_position, ctx->camera_position));
+        float outline = Vector3_dot(camera_to_pixel, pixel_normal);
+
+        Vector3_t reflect_vector = Vector3_normalized(Vector3_reflect(pixel_light_vector, pixel_normal));
+        Vector3_t pixel_to_camera = Vector3_normalized(Vector3_sub(ctx->camera_position, pixel_position));
+        float specular = clampf(Vector3_dot(reflect_vector, pixel_to_camera), 0, 1);
+
+        Vector3_t metal_color = Vector3_new(0, 0, 1);
+        Vector3_t specular_color = Vector3_mul(metal_color, powf(specular, 5));
+
+        final_color = Vector3_add(final_color, specular_color);
+
+        /*if (outline < 0.2 && outline > -0.2)
+        {
+            final_color = Vector3_new(0, 1, 0);
+        }*/
+
         put_pixel(ctx, x, y, z, final_color);
     }
 }
