@@ -59,6 +59,38 @@ static void obj_parse_vertex(Context_t *ctx, char *token)
 
 static void obj_parse_uv(Context_t *ctx, char *token)
 {
+    Vector3_t v;
+    size_t line_length = strlen(token);
+
+    char *base = NULL;
+    float *component[2] = {&v.x, &v.y};
+    int component_index = 0;
+    size_t i;
+    for (i = 0; i < line_length; i++)
+    {
+        int valid = is_valid_float(token[i]);
+
+        if (valid && !base)
+        {
+            base = &token[i];
+        }
+        else if (!valid && base)
+        {
+            token[i] = 0;
+            *component[component_index++] = atof(base);
+            if (component_index == 2)
+                break;
+            base = NULL;
+        }
+    }
+
+    if (component_index == 1)
+    {
+        *component[component_index] = atof(base);
+    }
+
+    v.z *= -1;
+    context_add_uv(ctx, v);
 }
 
 static void obj_parse_normal(Context_t *ctx, char *token)
@@ -131,6 +163,7 @@ static Vertex_t obj_parse_face_part(Context_t *ctx, char *token)
     }
 
     vertex.position = ctx->vertices[component[0]];
+    vertex.uv = ctx->uvs[component[1]];
     vertex.normal = ctx->normals[component[2]];
     return vertex;
 }

@@ -117,3 +117,12 @@ Vector3_t Vector3_cross(Vector3_t a, Vector3_t b)
                        a.z * b.x - a.x * b.z,
                        a.x * b.y - a.y * b.x);
 }
+
+Vector3_t Vector3_roty(Vector3_t a, float r)
+{
+    Vector3_t v;
+    v.x = cosf(r) * a.x - sinf(r) * a.z;
+    v.y = a.y;
+    v.z = sinf(r) * a.x + cosf(r) * a.z;
+    return v;
+}

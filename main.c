@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 int main(int argc, char **argv)
 {
@@ -11,8 +13,14 @@ int main(int argc, char **argv)
     ctx.height = 600;
 
     ctx.camera_position = Vector3_new(0, 1.5, -5);
+    ctx.point_light_position = Vector3_new(0, 0, -2);
 
     ctx.framebuffer = NULL;
+
+    int comp = 0;
+    ctx.texture = stbi_load(argv[2], &ctx.texture_width, &ctx.texture_height, &comp, 3);
+
+    ctx.depth_buffer = malloc(sizeof(float) * ctx.width * ctx.height);
 
     FILE *obj = fopen(argv[1], "rb");
     if (!obj)
@@ -69,12 +77,20 @@ int main(int argc, char **argv)
         SDL_LockTexture(texture, NULL, (void **)&ctx.framebuffer, &pitch);
 
         memset(ctx.framebuffer, 0, ctx.width * ctx.height * 4);
+        memset(ctx.depth_buffer, 0xff, ctx.width * ctx.height * sizeof(float));
+
+        ctx.put_pixel_counter = 0;
+        ctx.triangle_counter = 0;
+
+        ctx.roty += 0.01;
 
         size_t i;
         for (i = 0; i < ctx.faces_count; i++)
         {
             rasterize(&ctx, &ctx.faces[i]);
         }
+
+        printf("put_pixel: %llu triangles: %llu\n", ctx.put_pixel_counter, ctx.triangle_counter);
 
         SDL_UnlockTexture(texture);
 
