@@ -27,5 +27,3 @@ int clamp(int value, int _min, int _max);
 float clampf(float value, float _min, float _max);
 
 float linear_convert(float value, float old_min, float old_max, float new_min, float new_max);
-
-Vector3_t Vector3_roty(Vector3_t a, float r);

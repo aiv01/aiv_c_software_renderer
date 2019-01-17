@@ -12,12 +12,7 @@ int main(int argc, char **argv)
 
     ctx.camera_position = Vector3_new(0, 1.5, -5);
 
-    ctx.light_position = Vector3_new(0, -1, -10);
-
     ctx.framebuffer = NULL;
-
-    ctx.depth_buffer = malloc(ctx.width * ctx.height * sizeof(float));
-    memset(ctx.depth_buffer, 0, ctx.width * ctx.height * sizeof(float));
 
     FILE *obj = fopen(argv[1], "rb");
     if (!obj)
@@ -74,26 +69,12 @@ int main(int argc, char **argv)
         SDL_LockTexture(texture, NULL, (void **)&ctx.framebuffer, &pitch);
 
         memset(ctx.framebuffer, 0, ctx.width * ctx.height * 4);
-        memset(ctx.depth_buffer, MAXFLOAT, ctx.width * ctx.height * sizeof(float));
-
-        //rasterize(&ctx, &triangle);
-
-        ctx.put_pixel_counter = 0;
-        ctx.triangle_processed = 0;
-        ctx.triangle_culled = 0;
-
-        
 
         size_t i;
-        for(i=0;i<ctx.faces_count;i++)
+        for (i = 0; i < ctx.faces_count; i++)
         {
             rasterize(&ctx, &ctx.faces[i]);
         }
-        
-
-        printf("%llu %llu %llu %f\n", ctx.put_pixel_counter, ctx.triangle_processed, ctx.triangle_culled, ctx.camera_position.z);
-
-        ctx.roty += 0.01;
 
         SDL_UnlockTexture(texture);
 
