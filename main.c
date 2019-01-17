@@ -3,12 +3,6 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
-#define triangle(x0, y0, z0, x1, y1, z1, x2, y2, z2) \
-    Triangle_new(                                    \
-        Vertex_new(Vector3_new(x0, y0, z0)),         \
-        Vertex_new(Vector3_new(x1, y1, z1)),         \
-        Vertex_new(Vector3_new(x2, y2, z2)))
-
 int main(int argc, char **argv)
 {
     Context_t ctx;
@@ -18,7 +12,7 @@ int main(int argc, char **argv)
 
     ctx.camera_position = Vector3_new(0, 1.5, -5);
 
-    ctx.light_position = Vector3_new(0, 4, -10);
+    ctx.light_position = Vector3_new(0, -1, -10);
 
     ctx.framebuffer = NULL;
 
@@ -40,17 +34,6 @@ int main(int argc, char **argv)
     fread(obj_data, 1, obj_size, obj);
 
     obj_parse(&ctx, obj_data, obj_size);
-
-    size_t i;
-    for (i = 0; i < ctx.vertices_count; i++)
-    {
-        //Vector3_print(ctx.vertices[i]);
-    }
-
-    Triangle_t triangle = triangle(
-        0, 1, 0,
-        0.8, 0, 0,
-        -1, -0.5, 0);
 
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -101,7 +84,7 @@ int main(int argc, char **argv)
 
         
 
-        
+        size_t i;
         for(i=0;i<ctx.faces_count;i++)
         {
             rasterize(&ctx, &ctx.faces[i]);
@@ -109,6 +92,8 @@ int main(int argc, char **argv)
         
 
         printf("%llu %llu %llu %f\n", ctx.put_pixel_counter, ctx.triangle_processed, ctx.triangle_culled, ctx.camera_position.z);
+
+        ctx.roty += 0.01;
 
         SDL_UnlockTexture(texture);
 

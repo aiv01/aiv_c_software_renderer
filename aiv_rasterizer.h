@@ -7,6 +7,8 @@ typedef struct Vertex
     Vector3_t normal;
     Vector3_t color;
 
+    Vector3_t world_position;
+    Vector3_t world_normal;
     Vector3_t view_position;
 
     int raster_x;
@@ -47,6 +49,8 @@ typedef struct Context
     size_t faces_count;
 
     Vector3_t light_position;
+
+    float roty;
 
     unsigned long long put_pixel_counter;
     unsigned long long triangle_processed;

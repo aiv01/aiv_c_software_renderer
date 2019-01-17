@@ -63,9 +63,9 @@ static void put_pixel(Context_t *ctx, int x, int y, float z, Vector3_t color)
     if (z < -1 || z > 1)
         return;
 
-    unsigned char r = color.x * 255;
-    unsigned char g = color.y * 255;
-    unsigned char b = color.z * 255;
+    unsigned char r = (unsigned char)(color.x * 255.0);
+    unsigned char g = (unsigned char)(color.y * 255.0);
+    unsigned char b = (unsigned char)(color.z * 255.0);
 
     int offset = ((y * ctx->width) + x) * 4;
 
@@ -104,7 +104,9 @@ static void view_to_raster(Context_t *ctx, Vertex_t *vertex)
 
 static void point_to_view(Context_t *ctx, Vertex_t *vertex)
 {
-    vertex->view_position = Vector3_sub(vertex->position, ctx->camera_position);
+    vertex->world_position = Vector3_roty(vertex->position, ctx->roty);
+    vertex->world_normal =  Vector3_roty(vertex->normal, ctx->roty);
+    vertex->view_position = Vector3_sub(vertex->world_position, ctx->camera_position);
 }
 
 static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2])
@@ -121,14 +123,14 @@ static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2
     int end_x = lerp(right[0]->raster_x, right[1]->raster_x, gradientRight);
     int x;
 
-    Vector3_t left_color = lerp3(left[0]->position, left[1]->position, gradientLeft);
-    Vector3_t right_color = lerp3(right[0]->position, right[1]->position, gradientRight);
+    //Vector3_t left_color = lerp3(left[0]->position, left[1]->position, gradientLeft);
+    //Vector3_t right_color = lerp3(right[0]->position, right[1]->position, gradientRight);
 
-    Vector3_t left_normal = lerp3(left[0]->normal, left[1]->normal, gradientLeft);
-    Vector3_t right_normal = lerp3(right[0]->normal, right[1]->normal, gradientRight);
+    Vector3_t left_normal = lerp3(left[0]->world_normal, left[1]->world_normal, gradientLeft);
+    Vector3_t right_normal = lerp3(right[0]->world_normal, right[1]->world_normal, gradientRight);
 
-    Vector3_t left_vertex = lerp3(left[0]->position, left[1]->position, gradientLeft);
-    Vector3_t right_vertex = lerp3(right[0]->position, right[1]->position, gradientRight);
+    Vector3_t left_vertex = lerp3(left[0]->world_position, left[1]->world_position, gradientLeft);
+    Vector3_t right_vertex = lerp3(right[0]->world_position, right[1]->world_position, gradientRight);
 
     float start_z = lerp(left[0]->z, left[1]->z, gradientLeft);
     float end_z = lerp(right[0]->z, right[1]->z, gradientRight);
@@ -146,8 +148,9 @@ static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2
         Vector3_t normal = Vector3_normalized(lerp3(left_normal, right_normal, gradient));
         Vector3_t vertex = lerp3(left_vertex, right_vertex, gradient);
         Vector3_t light_vertex = Vector3_normalized(Vector3_sub(ctx->light_position, vertex));
-        float lambert = clampf(Vector3_dot(light_vertex, normal), 0, 1);
-        put_pixel(ctx, x, y, z, Vector3_mul(Vector3_add(color, Vector3_new(0.1, 0.1, 0.1)), lambert));
+        //Vector3_t light_vertex = Vector3_new(0, 0, -1);
+        float lambert = clampf(Vector3_dot(normal, light_vertex), 0.0, 1.0);
+        put_pixel(ctx, x, y, z, Vector3_mul(color, lambert));
     }
 }
 
@@ -161,13 +164,18 @@ static int vertex_out_of_screen(Context_t *ctx, Vertex_t *vertex)
 
 static int triangle_facing(Context_t *ctx, Triangle_t *triangle)
 {
-    Vector3_t edge0 = Vector3_sub(triangle->b.view_position, triangle->a.view_position);
-    Vector3_t edge1 = Vector3_sub(triangle->c.view_position, triangle->a.view_position);
+    Vector3_t a = triangle->a.world_position;
+    Vector3_t b = triangle->b.world_position;
+    Vector3_t c = triangle->c.world_position;
+
+    Vector3_t edge0 = Vector3_sub(b, a);
+    Vector3_t edge1 = Vector3_sub(c, a);
+
     Vector3_t normal = Vector3_cross(edge0, edge1);
-    float dot = Vector3_dot(normal, Vector3_new(0, 0, -1));
+    float dot = Vector3_dot(Vector3_normalized(Vector3_sub(a, ctx->camera_position)), normal);
     if (dot >= 0)
-        return 0;
-    return 1;
+        return 1;
+    return 0;
 }
 
 void rasterize(Context_t *ctx, Triangle_t *triangle)

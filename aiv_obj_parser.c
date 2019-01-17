@@ -131,7 +131,7 @@ static Vertex_t obj_parse_face_part(Context_t *ctx, char *token)
     }
 
     vertex.position = ctx->vertices[component[0]];
-    vertex.normal = ctx->vertices[component[2]];
+    vertex.normal = ctx->normals[component[2]];
     return vertex;
 }
 
