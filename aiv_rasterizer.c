@@ -111,7 +111,8 @@ static void scanline(Context_t *ctx, int y, Vertex_t *left[2], Vertex_t *right[2
 
     for (x = start_x; x <= end_x; x++)
     {
-        put_pixel(ctx, x, y, Vector3_new(1, 0, 0));
+        Vector3_t color = Vector3_new(1, 0, 0);
+        put_pixel(ctx, x, y, color);
     }
 }
 
